@@ -2,9 +2,11 @@
 html(ng-app="app")
 	head
 		title Datepicker demo
+		link(rel="stylesheet", href="/datepicker/datepicker.css")
 		script(src="/components/angular/angular.min.js")
 		script(src="/datepicker/datepicker.js")
 		script(src="/app.js")
 	body(ng-controller="AppCtrl")
-		div {{from}} - {{to}}
+		input(ng-model="from")
+		input(ng-model="to")
 		date-picker(from="from", to="to", months-count="3")
