@@ -1,0 +1,6 @@
+{
+  "name": "datepicker",
+  "dependencies": {
+    "angular": "~1.2.1"
+  }
+}

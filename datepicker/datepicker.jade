@@ -1,0 +1,12 @@
+div
+	a(href="#", ng-click="prev()", style="float: left") &lt;
+	a(href="#", ng-click="next()", style="float: right") &gt;
+
+table(ng-repeat="month in monthsData", style="float: left")
+	thead
+		tr
+			th(colspan="7", ng-bind="month[0][0] | date: 'MMMM yyyy'")
+	tbody
+		tr(ng-repeat="week in month")
+			td(ng-repeat="day in week")
+				span(ng-bind="day | date: 'd'")

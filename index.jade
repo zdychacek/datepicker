@@ -1,0 +1,10 @@
+!!! 5
+html
+	head
+		title Datepicker demo
+		script(src="/bower_components/angular/angular.min.js")
+		script(src="/datepicker/datepicker.js")
+		script(src="/app.js")
+	body(ng-controller="AppCtrl")
+		div {{from}} - {{to}}
+		date-picker(from="from", to="to", months-count="3")
