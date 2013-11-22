@@ -1,0 +1,12 @@
+input(ng-model="from", name="from", ng-focus="setRangeSelection('from')")
+input(ng-model="to", name="to", ng-focus="setRangeSelection('to')")
+
+date-picker(
+	from="from",
+	to="to",
+	months-count="3",
+	range-selection="currentRangeSelection",
+	ng-show="isCalendarVisible",
+	disable-future-selection,
+	ng-class="currentRangeSelection"
+)

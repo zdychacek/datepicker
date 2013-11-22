@@ -1,0 +1,20 @@
+div.datepicker
+	div.nav
+		a.prev(href="#", ng-click="prev()") &lt;
+		| &nbsp;&nbsp;
+		a.next(href="#", ng-click="next()") &gt;
+
+	div.content
+		table(ng-repeat="month in monthsData")
+			thead
+				tr
+					th(colspan="7", ng-bind="month.firstDayOfMonth | date: 'MMMM yyyy'")
+			tbody
+				tr(ng-repeat="week in month.weeks")
+					td.day(
+						ng-repeat="day in week",
+						ng-class="{'prev-next-month': !isDayWithinMonth(day, month.firstDayOfMonth), 'is-selected': isDaySelected(day), 'is-disabled': isDayDisabled(day)}"
+					)
+						ng-switch(on="isDayDisabled(day)")
+							span(ng-switch-when="true", ng-bind="day | date: 'd'")
+							a(ng-switch-default="false", ng-bind="day | date: 'd'", ng-click="selectDay(day)", href="#")

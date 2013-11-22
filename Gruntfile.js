@@ -6,12 +6,12 @@ module.exports = function (grunt) {
 				livereload: true
 			},
 			less: {
-				files: ['datepicker/*.less'],
+				files: ['calendar/**/*.less'],
 				tasks: ['less']
 			},
 			jade: {
 				files: [
-					'datepicker/*.jade',
+					'calendar/**/*.jade',
 					'index.jade'
 				],
 				tasks: ['jade']
@@ -41,7 +41,7 @@ module.exports = function (grunt) {
 					pretty: true
 				},
 				files: (function () {
-					var files = grunt.file.expandMapping(['datepicker/*.jade'], '', {
+					var files = grunt.file.expandMapping(['calendar/**/*.jade'], '', {
 						cwd: '.',
 						rename: function (destBase, destPath) {
 							return destBase + destPath.replace(/\.jade$/, '.html');
@@ -60,10 +60,10 @@ module.exports = function (grunt) {
 		less: {
 			development: {
 				options: {
-					paths: ['datepicker']
+					paths: ['calendar']
 				},
 				files: {
-				  'datepicker/datepicker.css': 'datepicker/datepicker.less',
+				  'calendar/calendar.css': 'calendar/calendar.less',
 				}
 			}
 		}

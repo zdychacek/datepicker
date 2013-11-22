@@ -1,0 +1,36 @@
+.datepicker {
+	.nav {
+		width: 420px;
+		overflow: hidden;
+
+		a {
+			&.prev {
+				//float: left;
+			}
+
+			&.next {
+				//float: right;
+			}
+		}
+	}
+
+	.content {
+		overflow: hidden;
+
+		table {
+			float: left;
+
+			td.day {
+				&.prev-next-month {
+					background: none !important;
+					a {
+						display: none;
+					}
+				}
+				&.is-selected {
+					background: #f00;
+				}
+			}
+		}
+	}
+}
