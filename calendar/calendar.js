@@ -7,6 +7,17 @@
 		return {
 			restrict: 'EA',
 			templateUrl: 'calendar/daterangeselector.html',
+			controller: function () {
+				var currentRangeSelection;
+
+				this.setCurrentRangeSelection = function (selection) {
+					currentRangeSelection = selection;
+				};
+
+				this.getCurrentRangeSelection = function () {
+					return currentRangeSelection;
+				};				
+			},
 			link: function (scope, element, attrs, ctrl) {
 				var fromInput = element[0].querySelector('input[name="from"]'),
 					toInput = element[0].querySelector('input[name="to"]');
@@ -14,15 +25,14 @@
 				scope.isCalendarVisible = false;
 
 				scope.setRangeSelection = function (rangeToSelect) {
-					scope.currentRangeSelection = rangeToSelect;
-					scope.isCalendarVisible = true;					
+					ctrl.setCurrentRangeSelection(rangeToSelect);
+					scope.currentRangeSelection = ctrl.getCurrentRangeSelection();
+					scope.isCalendarVisible = true;
 				};
 
-				scope.$on('currentRangeSelectionChanged', function (e, value) {
-					scope.currentRangeSelection = value;
-				})
-
-				scope.$watch('currentRangeSelection', function (val) {
+				scope.$watch(function () {
+					return ctrl.getCurrentRangeSelection();
+				}, function (val) {
 					if (val == 'from') {
 						$timeout(function () {
 							fromInput.focus();
@@ -103,7 +113,7 @@
 		// direktiva
 		return {
 			restrict: 'EA',
-			require: '?ngShow',
+			require: '^?dateRangeSelector',
 			scope: {
 				from: '=',
 				to: '=',
@@ -113,11 +123,9 @@
 				rangeSelection: '='
 			},
 			templateUrl: 'calendar/datepicker.html',
-			link: function (scope, element, attrs, ngShow) {
-				console.log(ngShow);
-				
-				var rangeMode = scope.from && scope.to ? true : false,
-					disableFutureSelection = typeof attrs.disableFutureSelection !== 'undefined' ? true : false;
+			link: function (scope, element, attrs, ctrl) {
+				var rangeMode = (scope.from && scope.to)? true : false,
+					disableFutureSelection = (typeof attrs.disableFutureSelection !== 'undefined')? true : false;
 
 				scope.currentViewDate = scope.from || scope.model || new Date();
 				scope.count = scope.monthsCount || 1;
@@ -126,11 +134,21 @@
 					scope.modelFrom = new Date(scope.from || new Date());
 					scope.modelTo = new Date(scope.to || new Date());
 					scope.currentRangeSelection = scope.rangeSelection || null;
-
-					scope.$emit('currentRangeSelectionChanged', scope.currentRangeSelection);
+					
+					if (ctrl) {
+						ctrl.setCurrentRangeSelection(scope.currentRangeSelection);
+					}
 				}
 				else {
 					scope.model = new Date(scope.value || new Date());					
+				}
+
+				if (ctrl) {
+					scope.$watch(function () {
+						return ctrl.getCurrentRangeSelection();
+					}, function (val) {
+						scope.currentRangeSelection = val;
+					});
 				}
 
 				scope.$watch('currentViewDate', function (date) {
@@ -163,16 +181,7 @@
 
 				scope.selectDay = function (day) {
 					if (rangeMode) {
-						if (scope.currentRangeSelection == 'from') {
-							scope.modelFrom = new Date(day);
-
-							if (day > scope.modelTo) {
-								scope.modelTo = new Date(day);
-							}
-
-							scope.currentRangeSelection = 'to';
-						}
-						else {
+						if (scope.currentRangeSelection == 'to') {
 							scope.modelTo = new Date(day);
 
 							if (day < scope.modelFrom) {
@@ -180,12 +189,24 @@
 							}
 
 							scope.currentRangeSelection = 'from';
+							scope.to && (scope.to = scope.modelTo);
+						}
+						else {
+							scope.modelFrom = new Date(day);
+
+							if (day > scope.modelTo) {
+								scope.modelTo = new Date(day);
+							}
+
+							scope.from && (scope.from = scope.modelFrom);
+							scope.currentRangeSelection = 'to';
+						}
+
+						if (ctrl) {
+							ctrl.setCurrentRangeSelection(scope.currentRangeSelection);
 						}
 
 						scope.rangeSelection && (scope.rangeSelection = scope.currentRangeSelection);
-
-						scope.from && (scope.from = scope.modelFrom);
-						scope.to && (scope.to = scope.modelTo);
 					}
 					else {
 						scope.model = new Date(day)
