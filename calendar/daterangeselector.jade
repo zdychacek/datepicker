@@ -1,8 +1,5 @@
-p
-	{{currentRangeSelection}}
-	
-input(ng-model="from", name="from", ng-focus="setRangeSelection('from')")
-input(ng-model="to", name="to", ng-focus="setRangeSelection('to')")
+input(ng-model="from", name="from", ng-focus="setRangeSelection('from')", date-format="d.M.yyyy")
+input(ng-model="to", name="to", ng-focus="setRangeSelection('to')", date-format="d.M.yyyy")
 
 date-picker(
 	from="from",

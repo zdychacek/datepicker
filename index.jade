@@ -9,5 +9,5 @@ html(ng-app="app")
 	body(ng-controller="AppCtrl")
 		div(date-range-selector)
 
-		input(ng-model="date")
+		input(ng-model="date", date-format="d.M.yyyy")
 		date-picker(value="date", disable-future-selection)

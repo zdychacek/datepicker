@@ -3,21 +3,45 @@
 	
 	var calendar = angular.module('calendar', []);
 
+	calendar.directive('dateFormat', ['$filter', function ($filter) {
+		return {
+			restrict: 'A',
+			require: 'ngModel',
+			link: function (scope, el, attrs, ngModel) {
+				var format = attrs.dateFormat;
+
+				if (!format) {
+					throw new Error('You must provide format description.');
+				}
+
+				ngModel.$formatters.push(function (value) {
+					return $filter('date')(value, format);
+				});
+				
+      			ngModel.$parsers.unshift(function () {
+					return ngModel.$modelValue;
+				});
+			}
+		};
+	}])
+
+	calendar.controller('CalendarCtrl', function () {
+		var currentRangeSelection;
+
+		this.setCurrentRangeSelection = function (selection) {
+			currentRangeSelection = selection;
+		};
+
+		this.getCurrentRangeSelection = function () {
+			return currentRangeSelection;
+		};				
+	})
+
 	calendar.directive('dateRangeSelector', ['$timeout', '$document', function ($timeout, $document) {
 		return {
 			restrict: 'EA',
 			templateUrl: 'calendar/daterangeselector.html',
-			controller: function () {
-				var currentRangeSelection;
-
-				this.setCurrentRangeSelection = function (selection) {
-					currentRangeSelection = selection;
-				};
-
-				this.getCurrentRangeSelection = function () {
-					return currentRangeSelection;
-				};				
-			},
+			controller: 'CalendarCtrl',
 			link: function (scope, element, attrs, ctrl) {
 				var fromInput = element[0].querySelector('input[name="from"]'),
 					toInput = element[0].querySelector('input[name="to"]');
@@ -134,7 +158,7 @@
 					scope.modelFrom = new Date(scope.from || new Date());
 					scope.modelTo = new Date(scope.to || new Date());
 					scope.currentRangeSelection = scope.rangeSelection || null;
-					
+
 					if (ctrl) {
 						ctrl.setCurrentRangeSelection(scope.currentRangeSelection);
 					}
