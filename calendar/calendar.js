@@ -17,8 +17,8 @@
 				ngModel.$formatters.push(function (value) {
 					return $filter('date')(value, format);
 				});
-				
-      			ngModel.$parsers.unshift(function () {
+
+      			ngModel.$parsers.push(function () {
 					return ngModel.$modelValue;
 				});
 			}
@@ -42,11 +42,22 @@
 			restrict: 'EA',
 			templateUrl: 'calendar/daterangeselector.html',
 			controller: 'CalendarCtrl',
+			scope: {
+				onShowHide: '&',
+				from: '=',
+				to: '='
+			},
 			link: function (scope, element, attrs, ctrl) {
 				var fromInput = element[0].querySelector('input[name="from"]'),
 					toInput = element[0].querySelector('input[name="to"]');
 
-				scope.isCalendarVisible = false;
+				scope.isCalendarVisible = null;
+
+				scope.$watch('isCalendarVisible', function (isVisible) {
+					if (isVisible !== null && scope.onShowHide) {
+						scope.onShowHide()(isVisible, scope.from, scope.to);
+					}
+				});
 
 				scope.setRangeSelection = function (rangeToSelect) {
 					ctrl.setCurrentRangeSelection(rangeToSelect);
@@ -138,6 +149,7 @@
 		return {
 			restrict: 'EA',
 			require: '^?dateRangeSelector',
+			replace: true,
 			scope: {
 				from: '=',
 				to: '=',
@@ -170,12 +182,15 @@
 				if (ctrl) {
 					scope.$watch(function () {
 						return ctrl.getCurrentRangeSelection();
-					}, function (val) {
-						scope.currentRangeSelection = val;
+					}, function (currentlySelected, prevSelected) {
+						scope.currentRangeSelection = currentlySelected;
+						element
+							.removeClass('range-' + prevSelected)
+							.addClass('range-' + currentlySelected);
 					});
 				}
 
-				scope.$watch('currentViewDate', function (date) {
+				var computeViewDates = function (date) {
 					var monthsData = [];
 
 					for (var i = 0; i < scope.count; i++) {
@@ -187,7 +202,9 @@
 					}
 
 					scope.monthsData = monthsData;
-				});
+				};
+
+				scope.$watch('currentViewDate', computeViewDates);
 
 				scope.prev = function () {
 					var prevDate = new Date(scope.currentViewDate);
