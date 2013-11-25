@@ -1,7 +1,107 @@
 (function (angular) {
 	'use strict';
-	
+
+	var PRISTINE_CLASS = 'ng-pristine',
+    	DIRTY_CLASS = 'ng-dirty';
+		
 	var calendar = angular.module('calendar', []);
+
+	calendar.constant('calendarConfig', {
+		template: function (attrs) {
+			return [
+				'<date-picker ',
+				'value="' + attrs.ngModel + '" ',
+				'class="menu"></date-picker>'
+			].join('');
+		},
+		dateFormat: 'd.M.yyyy',
+		dismiss: true,
+		position: 'relative'
+	})
+
+	calendar.directive('dateTime', ['$compile', '$document', '$filter', 'calendarConfig', '$parse', function ($compile, $document, $filter, calendarConfig, $parse) {
+		var body = $document.find('body');
+		var dateFilter = $filter('date');
+
+		return {
+			require: 'ngModel',
+			scope: true,
+			link: function (scope, element, attrs, ngModel) {
+				var format = attrs.dateFormat || calendarConfig.dateFormat,
+					parentForm = element.inheritedData('$formController'),
+					dismiss = attrs.dismiss ? $parse(attrs.dismiss)(scope) : calendarConfig.dismiss,
+					picker = null,
+					container = null,
+					position = attrs.position || calendarConfig.position;
+
+				ngModel.$formatters.push(function (value) {
+					return $filter('date')(value, format);
+				});
+
+				ngModel.$parsers.push(function () {
+					return ngModel.$modelValue;
+				});
+
+				var template = calendarConfig.template(attrs);
+
+				function clear () {
+					if (picker) {
+						picker.remove();
+						picker = null;
+					}
+					if (container) {
+						container.remove();
+						container = null;
+					}
+				};
+
+				function showPicker () {
+					if (picker) {
+						return;
+					}
+
+					picker = $compile(template)(scope);
+					scope.$digest();
+
+					scope.$on('setDate', function (event) {
+						event.stopPropagation();
+
+						if (ngModel.$pristine) {
+							ngModel.$dirty = true;
+							ngModel.$pristine = false;
+							element.removeClass(PRISTINE_CLASS).addClass(DIRTY_CLASS);
+							
+							if (parentForm) {
+								parentForm.$setDirty();
+							}
+							ngModel.$render();
+						}
+
+						if (dismiss) {
+							clear();
+						}
+					});
+
+					scope.$on('$destroy', clear);
+
+					container = angular.element('<div></div>');
+					element[0].parentElement.insertBefore(container[0], element[0].nextSibling);
+					container.append(picker);
+					picker.css({
+						top: element[0].offsetHeight + 'px',
+						display: 'block'
+					});
+
+					picker.bind('mousedown', function (evt) {
+						evt.preventDefault();
+					});
+				}
+
+				element.bind('focus', showPicker);
+				element.bind('blur', clear);
+			}
+		};
+	}])
 
 	calendar.directive('dateFormat', ['$filter', function ($filter) {
 		return {
@@ -18,7 +118,7 @@
 					return $filter('date')(value, format);
 				});
 
-      			ngModel.$parsers.push(function () {
+				ngModel.$parsers.push(function () {
 					return ngModel.$modelValue;
 				});
 			}
@@ -221,6 +321,8 @@
 				};
 
 				scope.selectDay = function (day) {
+					scope.$emit('setDate', day);
+
 					if (rangeMode) {
 						if (scope.currentRangeSelection == 'to') {
 							scope.modelTo = new Date(day);
