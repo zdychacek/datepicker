@@ -1,3 +1,6 @@
+/*
+ * Inspired by https://github.com/g00fy-/angular-datepicker/blob/master/app/scripts/input.js
+ */
 (function (angular) {
 	'use strict';
 
@@ -8,25 +11,22 @@
 
 	calendar.constant('calendarConfig', {
 		template: function (attrs) {
-			return [
-				'<date-picker ',
-				'value="' + attrs.ngModel + '" ',
-				'class="menu" months-count="' + attrs.monthsCount + '"></date-picker>'
-			].join('');
+			return '<date-picker value="' + attrs.ngModel + '" class="menu" months-count="' + attrs.monthsCount + '"></date-picker>';
 		},
 		dateFormat: 'd.M.yyyy',
 		dismiss: true,
 		position: 'relative'
 	})
 
-	calendar.directive('dateTime', ['$compile', '$document', '$filter', 'calendarConfig', '$parse', function ($compile, $document, $filter, calendarConfig, $parse) {
-		var body = $document.find('body');
+	calendar.directive('dateTime', ['$compile', '$window', '$filter', 'calendarConfig', '$parse', function ($compile, $window, $filter, calendarConfig, $parse) {
+		var body = $window.document.body;
 
 		return {
 			require: 'ngModel',
 			scope: true,
 			link: function (scope, element, attrs, ngModel) {
 				var format = attrs.dateFormat || calendarConfig.dateFormat,
+					position = attrs.position || calendarConfig.position,
 					parentForm = element.inheritedData('$formController'),
 					dismiss = attrs.dismiss ? $parse(attrs.dismiss)(scope) : calendarConfig.dismiss,
 					picker = null,
@@ -42,7 +42,7 @@
 
 				var template = calendarConfig.template(attrs);
 
-				function clear () {
+				function hidePicker () {
 					if (picker) {
 						picker.remove();
 						picker = null;
@@ -68,27 +68,31 @@
 							if (parentForm) {
 								parentForm.$setDirty();
 							}
+
 							ngModel.$render();
 						}
 
-						if (dismiss) {
-							clear();
-						}
+						dismiss && hidePicker();
 					});
 
-					scope.$on('$destroy', clear);
+					scope.$on('$destroy', hidePicker);
 
 					// napozicovani dropdownu
-					var rect = element[0].getBoundingClientRect(),
-						height = element[0].offsetHeight;
+					if (position == 'absolute') {
+						var rect = element[0].getBoundingClientRect(),
+							height = element[0].offsetHeight;
 
-					picker.css({
-						top: window.scrollY + rect.top + height + 'px',
-						left: window.scrollX + rect.left + 'px',
-						display: 'block',
-						position: 'absolute'
-					});
-					body.append(picker);
+						picker.css({
+							top: $window.scrollY + rect.top + height + 'px',
+							left: $window.scrollX + rect.left + 'px',
+							display: 'block',
+							position: 'absolute'
+						});
+						body.append(picker);
+					}
+					else {
+						element[0].parentNode.insertBefore(picker[0], element[0].nextSibling);
+					}
 
 					picker.bind('mousedown', function (evt) {
 						evt.preventDefault();
@@ -96,7 +100,7 @@
 				}
 
 				element.bind('focus', showPicker);
-				element.bind('blur', clear);
+				element.bind('blur', hidePicker);
 			}
 		};
 	}])
@@ -141,7 +145,6 @@
 			templateUrl: 'calendar/daterangeselector.html',
 			controller: 'CalendarCtrl',
 			scope: {
-				onShowHide: '&',
 				from: '=',
 				to: '='
 			},
@@ -151,12 +154,6 @@
 					picker = null;
 
 				scope.isCalendarVisible = null;
-
-				scope.$watch('isCalendarVisible', function (isVisible) {
-					if (isVisible !== null && scope.onShowHide) {
-						scope.onShowHide()(isVisible, scope.from, scope.to);
-					}
-				});
 
 				scope.setRangeSelection = function (rangeToSelect) {
 					ctrl.setCurrentRangeSelection(rangeToSelect);
@@ -323,7 +320,7 @@
 
 				scope.selectDay = function (day, e) {
 					e.preventDefault();
-					
+
 					scope.$emit('setDate', day);
 
 					if (rangeMode) {
