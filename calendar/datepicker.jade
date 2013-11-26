@@ -1,8 +1,8 @@
 div.datepicker
 	div.nav
-		a.prev(href="#", ng-click="prev()") &lt;
+		a.prev(ng-href="#", ng-click="prev($event)") &lt;
 		| &nbsp;&nbsp;
-		a.next(href="#", ng-click="next()") &gt;
+		a.next(ng-href="#", ng-click="next($event)") &gt;
 
 	div.content
 		table(ng-repeat="month in monthsData")
@@ -17,4 +17,4 @@ div.datepicker
 					)
 						ng-switch(on="isDayDisabled(day)")
 							span(ng-switch-when="true", ng-bind="day | date: 'd'")
-							a(ng-switch-default="false", ng-bind="day | date: 'd'", ng-click="selectDay(day)", href="#")
+							a(ng-switch-default="false", ng-bind="day | date: 'd'", ng-click="selectDay(day, $event)", href="#")

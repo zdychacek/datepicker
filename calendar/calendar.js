@@ -11,7 +11,7 @@
 			return [
 				'<date-picker ',
 				'value="' + attrs.ngModel + '" ',
-				'class="menu"></date-picker>'
+				'class="menu" months-count="' + attrs.monthsCount + '"></date-picker>'
 			].join('');
 		},
 		dateFormat: 'd.M.yyyy',
@@ -21,7 +21,6 @@
 
 	calendar.directive('dateTime', ['$compile', '$document', '$filter', 'calendarConfig', '$parse', function ($compile, $document, $filter, calendarConfig, $parse) {
 		var body = $document.find('body');
-		var dateFilter = $filter('date');
 
 		return {
 			require: 'ngModel',
@@ -31,7 +30,6 @@
 					parentForm = element.inheritedData('$formController'),
 					dismiss = attrs.dismiss ? $parse(attrs.dismiss)(scope) : calendarConfig.dismiss,
 					picker = null,
-					container = null,
 					position = attrs.position || calendarConfig.position;
 
 				ngModel.$formatters.push(function (value) {
@@ -48,10 +46,6 @@
 					if (picker) {
 						picker.remove();
 						picker = null;
-					}
-					if (container) {
-						container.remove();
-						container = null;
 					}
 				};
 
@@ -84,13 +78,17 @@
 
 					scope.$on('$destroy', clear);
 
-					container = angular.element('<div></div>');
-					element[0].parentElement.insertBefore(container[0], element[0].nextSibling);
-					container.append(picker);
+					// napozicovani dropdownu
+					var rect = element[0].getBoundingClientRect(),
+						height = element[0].offsetHeight;
+
 					picker.css({
-						top: element[0].offsetHeight + 'px',
-						display: 'block'
+						top: window.scrollY + rect.top + height + 'px',
+						left: window.scrollX + rect.left + 'px',
+						display: 'block',
+						position: 'absolute'
 					});
+					body.append(picker);
 
 					picker.bind('mousedown', function (evt) {
 						evt.preventDefault();
@@ -149,7 +147,8 @@
 			},
 			link: function (scope, element, attrs, ctrl) {
 				var fromInput = element[0].querySelector('input[name="from"]'),
-					toInput = element[0].querySelector('input[name="to"]');
+					toInput = element[0].querySelector('input[name="to"]'),
+					picker = null;
 
 				scope.isCalendarVisible = null;
 
@@ -184,7 +183,7 @@
 					scope.$apply('isCalendarVisible = false');
 				});
 
-				// stopnu bublani udalosti
+				
 				element.on('click', function (e) {
 					e.stopPropagation();
 				});
@@ -306,21 +305,25 @@
 
 				scope.$watch('currentViewDate', computeViewDates);
 
-				scope.prev = function () {
+				scope.prev = function (e) {
+					e.preventDefault();
 					var prevDate = new Date(scope.currentViewDate);
 
 					prevDate.setMonth(prevDate.getMonth() - 1);
 					scope.currentViewDate = prevDate;
 				};
 
-				scope.next = function () {
+				scope.next = function (e) {
+					e.preventDefault();
 					var nextDate = new Date(scope.currentViewDate);
 					nextDate.setMonth(nextDate.getMonth() + 1);
 					
 					scope.currentViewDate = nextDate;
 				};
 
-				scope.selectDay = function (day) {
+				scope.selectDay = function (day, e) {
+					e.preventDefault();
+					
 					scope.$emit('setDate', day);
 
 					if (rangeMode) {
@@ -370,9 +373,16 @@
 					}
 				};
 
-				scope.isDayDisabled = function (day) {
-					return disableFutureSelection && isDayInFuture(day);
-				};
+				scope.isDayDisabled = (function () {
+					if (!disableFutureSelection) {
+						return angular.noop;
+					}
+					else {
+						return function (day) {
+							return isDayInFuture(day);
+						};
+					}
+				})();
 			}
 		};
 	}]);
