@@ -176,11 +176,14 @@
 					}
 				});
 
+				scope.$watch('isCalendarVisible', function (isVisible) {
+					scope.$broadcast('centerView');
+				});
+
 				$document.on('click', function () {
 					scope.$apply('isCalendarVisible = false');
 				});
 
-				
 				element.on('click', function (e) {
 					e.stopPropagation();
 				});
@@ -259,32 +262,18 @@
 				var rangeMode = (scope.from && scope.to)? true : false,
 					disableFutureSelection = (typeof attrs.disableFutureSelection !== 'undefined')? true : false;
 
-				scope.currentViewDate = scope.from || scope.model || new Date();
-				scope.count = scope.monthsCount || 1;
+				// pokud je vybrano obdobi spadajiciho do stejneho mesice, tak kalendar vycentruji
+				var centerView = function () {
+					if (scope.modelFrom.getMonth() == scope.modelTo.getMonth()) {
+						var startMonthDate = new Date(scope.modelFrom);
 
-				if (rangeMode) {
-					scope.modelFrom = new Date(scope.from || new Date());
-					scope.modelTo = new Date(scope.to || new Date());
-					scope.currentRangeSelection = scope.rangeSelection || null;
-
-					if (ctrl) {
-						ctrl.setCurrentRangeSelection(scope.currentRangeSelection);
+						startMonthDate.setMonth(startMonthDate.getMonth() - Math.floor(scope.count / 2));
+						scope.currentViewDate = startMonthDate;
 					}
-				}
-				else {
-					scope.model = new Date(scope.value || new Date());					
-				}
-
-				if (ctrl) {
-					scope.$watch(function () {
-						return ctrl.getCurrentRangeSelection();
-					}, function (currentlySelected, prevSelected) {
-						scope.currentRangeSelection = currentlySelected;
-						element
-							.removeClass('range-' + prevSelected)
-							.addClass('range-' + currentlySelected);
-					});
-				}
+					else {
+						scope.currentViewDate = scope.modelFrom;
+					}
+				};
 
 				var computeViewDates = function (date) {
 					var monthsData = [];
@@ -300,7 +289,34 @@
 					scope.monthsData = monthsData;
 				};
 
+				scope.count = scope.monthsCount || 1;
+				scope.$on('centerView', centerView);
 				scope.$watch('currentViewDate', computeViewDates);
+
+				if (rangeMode) {
+					scope.modelFrom = new Date(scope.from || new Date());
+					scope.modelTo = new Date(scope.to || new Date());
+					scope.currentRangeSelection = scope.rangeSelection || null;
+
+					if (ctrl) {
+						ctrl.setCurrentRangeSelection(scope.currentRangeSelection);
+					}
+				}
+				else {
+					scope.model = new Date(scope.value || new Date());					
+					scope.currentViewDate = scope.model ;
+				}
+
+				if (ctrl) {
+					scope.$watch(function () {
+						return ctrl.getCurrentRangeSelection();
+					}, function (currentlySelected, prevSelected) {
+						scope.currentRangeSelection = currentlySelected;
+						element
+							.removeClass('range-' + prevSelected)
+							.addClass('range-' + currentlySelected);
+					});
+				}
 
 				scope.prev = function (e) {
 					e.preventDefault();
@@ -332,7 +348,7 @@
 							}
 
 							scope.currentRangeSelection = 'from';
-							scope.to && (scope.to = scope.modelTo);
+							
 						}
 						else {
 							scope.modelFrom = new Date(day);
@@ -340,8 +356,7 @@
 							if (day > scope.modelTo) {
 								scope.modelTo = new Date(day);
 							}
-
-							scope.from && (scope.from = scope.modelFrom);
+							
 							scope.currentRangeSelection = 'to';
 						}
 
@@ -349,6 +364,8 @@
 							ctrl.setCurrentRangeSelection(scope.currentRangeSelection);
 						}
 
+						scope.from && (scope.from = scope.modelFrom);
+						scope.to && (scope.to = scope.modelTo);
 						scope.rangeSelection && (scope.rangeSelection = scope.currentRangeSelection);
 					}
 					else {
