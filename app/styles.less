@@ -1,6 +1,22 @@
+.pos-relative {
+	position: relative;
+}
+
+.menu {
+	position: absolute;
+	z-index: 99;
+}
+
 .datepicker {
 	background: #fff;
 	border: 1px solid #000;
+	
+	-webkit-touch-callout: none;
+	-webkit-user-select: none;
+	-khtml-user-select: none;
+	-moz-user-select: none;
+	-ms-user-select: none;
+	user-select: none;
 	
 	.nav {
 		width: 420px;
@@ -39,7 +55,12 @@
 }
 
 .date-range-selector {
+	position: relative;;
+
 	.datepicker {
+		position: absolute;
+		z-index: 99;
+
 		&.range-from {
 			border: 1px solid #0f0;
 		}

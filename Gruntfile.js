@@ -6,13 +6,12 @@ module.exports = function (grunt) {
 				livereload: true
 			},
 			less: {
-				files: ['calendar/**/*.less'],
+				files: ['app/**/*.less'],
 				tasks: ['less']
 			},
 			jade: {
 				files: [
-					'calendar/**/*.jade',
-					'index.jade'
+					'app/**/*.jade'
 				],
 				tasks: ['jade']
 			}
@@ -21,7 +20,7 @@ module.exports = function (grunt) {
 			server: {
 				options: {
 					port: 9001,
-					base: '.',
+					base: 'app',
 					keepalive: true
 				}
 			}
@@ -41,29 +40,22 @@ module.exports = function (grunt) {
 					pretty: true
 				},
 				files: (function () {
-					var files = grunt.file.expandMapping(['calendar/**/*.jade'], '', {
+					return grunt.file.expandMapping(['app/**/*.jade'], '', {
 						cwd: '.',
 						rename: function (destBase, destPath) {
 							return destBase + destPath.replace(/\.jade$/, '.html');
 						}
 					});
-
-					files.push({
-						src: 'index.jade',
-						dest: 'index.html'
-					});
-
-					return files;
 				})()
 			}
 		},
 		less: {
 			development: {
 				options: {
-					paths: ['calendar']
+					paths: ['app']
 				},
 				files: {
-				  'calendar/calendar.css': 'calendar/calendar.less',
+				  'app/styles.css': 'app/styles.less',
 				}
 			}
 		}
